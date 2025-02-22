@@ -39,3 +39,25 @@ async def get_prayer_times(latitude: float, longitude: float) -> Dict[str, str]:
     except Exception as e:
         logging.error(f"Unexpected error occurred: {str(e)}")
         raise
+
+
+async def get_address(latitude: float, longitude: float) -> str:
+    """Get address from coordinates using Nominatim API"""
+    url = f"https://nominatim.openstreetmap.org/reverse?lat={latitude}&lon={longitude}&format=json&accept-language=uz"
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    if 'address' in data:
+                        address = data['address']
+                        # Try to get city/town and state
+                        city = address.get('city', address.get('town', address.get('village', '')))
+                        state = address.get('state', '')
+                        if city and state:
+                            return f"{city}, {state}"
+                        return city or state or "Noma'lum hudud"
+                return "Noma'lum hudud"
+    except Exception as e:
+        print(f"Error getting address: {e}")
+        return "Noma'lum hudud"

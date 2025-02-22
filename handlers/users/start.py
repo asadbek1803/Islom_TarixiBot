@@ -9,7 +9,7 @@ from data.config import ADMINS
 from components.messages import buttons, messages
 from datetime import datetime
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
-from components.api import get_prayer_times
+from components.api import get_prayer_times, get_address
 
 router = Router()
 
@@ -144,7 +144,25 @@ async def handle_namaz_time_btn(callback: types.CallbackQuery):
     language = user.get("language", "uz")
     
     if user.get("latitude") and user.get("longitude"):
-        # Foydalanuvchida joylashuvi bor, yangilash tugmasini ko'rsatamiz
+        prayer_times = await get_prayer_times(user.get("latitude"), user.get("longitude"))
+
+        address = await get_address(user.get("latitude"), user.get("longitude"))
+        # Format prayer times text with address
+        prayer_times_text = f"""🕌 Namoz vaqtlari:
+                                📌 Manzil: {address}
+
+                                🌄 Bomdod: {prayer_times["Fajr"]}
+                                ☀️ Peshin: {prayer_times["Dhuhr"]}
+                                🌇 Asr: {prayer_times["Asr"]}
+                                🌆 Shom: {prayer_times["Maghrib"]}
+                                🌃 Xufton: {prayer_times["Isha"]}
+        """
+        
+        await callback.message.answer(
+            text=prayer_times_text,
+            parse_mode=ParseMode.HTML,
+            reply_markup=get_inline_keyboard(language)
+        )
         update_location_keyboard = ReplyKeyboardMarkup(
             keyboard=[
                 [KeyboardButton(text=buttons[language]["btn_update_location"], request_location=True)]
@@ -157,7 +175,6 @@ async def handle_namaz_time_btn(callback: types.CallbackQuery):
             reply_markup=update_location_keyboard
         )
     else:
-        # Foydalanuvchida joylashuvi yo'q, joylashuvni so'raymiz
         location_keyboard = ReplyKeyboardMarkup(
             keyboard=[
                 [KeyboardButton(text=buttons[language]["btn_send_location"], request_location=True)]
@@ -172,7 +189,7 @@ async def handle_namaz_time_btn(callback: types.CallbackQuery):
     
     await callback.answer()
 
-@router.message(F.location)  # Changed from F.content_types
+@router.message(F.location)
 async def handle_location(message: types.Message):
     user = await db.select_user(telegram_id=message.from_user.id)
     language = user.get("language", "uz")
@@ -180,20 +197,25 @@ async def handle_location(message: types.Message):
     latitude = message.location.latitude
     longitude = message.location.longitude
     
-    # Joylashuvni ma'lumotlar bazasiga saqlash
+    # Get address from coordinates
+    address = await get_address(latitude, longitude)
+    
+    # Save location to database
     await db.save_user_location(message.from_user.id, latitude, longitude)
     
-    # Namoz vaqtlarini hisoblash
+    # Get prayer times
     prayer_times = await get_prayer_times(latitude, longitude)
     
-    # Namoz vaqtlarini foydalanuvchiga yuborish
-    prayer_times_text = messages[language]["namaz_times_template"].format(
-        fajr=prayer_times["Fajr"],
-        dhuhr=prayer_times["Dhuhr"],
-        asr=prayer_times["Asr"],
-        maghrib=prayer_times["Maghrib"],
-        isha=prayer_times["Isha"]
-    )
+    # Format prayer times text with address
+    prayer_times_text = f"""🕌 Namoz vaqtlari:
+                            📌 Manzil: {address}
+
+                            🌄 Bomdod: {prayer_times["Fajr"]}
+                            ☀️ Peshin: {prayer_times["Dhuhr"]}
+                            🌇 Asr: {prayer_times["Asr"]}
+                            🌆 Shom: {prayer_times["Maghrib"]}
+                            🌃 Xufton: {prayer_times["Isha"]}
+    """
     
     await message.answer(
         text=prayer_times_text,
@@ -201,23 +223,27 @@ async def handle_location(message: types.Message):
         reply_markup=get_inline_keyboard(language)
     )
 
-@router.message(F.text ==  buttons["uz"]["btn_update_location"] or
-                F.text ==  buttons["kiril"]["btn_update_location"])  # Changed filter
+@router.message(F.text.in_({buttons["uz"]["btn_update_location"], buttons["kiril"]["btn_update_location"]}))
 async def handle_update_location(message: types.Message):
     user = await db.select_user(telegram_id=message.from_user.id)
     language = user.get("language", "uz")
     
     if user.get("latitude") and user.get("longitude"):
-        # Saqlangan joylashuv bo'yicha namoz vaqtlarini hisoblab beramiz
+        # Get saved address
+        address = await get_address(user["latitude"], user["longitude"])
+        
+        # Get prayer times using saved coordinates
         prayer_times = await get_prayer_times(user["latitude"], user["longitude"])
         
-        prayer_times_text = messages[language]["namaz_times_template"].format(
-            fajr=prayer_times["Fajr"],
-            dhuhr=prayer_times["Dhuhr"],
-            asr=prayer_times["Asr"],
-            maghrib=prayer_times["Maghrib"],
-            isha=prayer_times["Isha"]
-        )
+        # Format prayer times text with address
+        prayer_times_text = f"""🕌 Namoz vaqtlari:
+                📌 Manzil: {address}
+
+                🌄 Bomdod: {prayer_times["Fajr"]}
+                ☀️ Peshin: {prayer_times["Dhuhr"]}
+                🌇 Asr: {prayer_times["Asr"]}
+                🌆 Shom: {prayer_times["Maghrib"]}
+                🌃 Xufton: {prayer_times["Isha"]}"""
         
         await message.answer(
             text=prayer_times_text,
@@ -225,7 +251,6 @@ async def handle_update_location(message: types.Message):
             reply_markup=get_inline_keyboard(language)
         )
     else:
-        # Foydalanuvchida joylashuvi yo'q, joylashuvni so'raymiz
         location_keyboard = ReplyKeyboardMarkup(
             keyboard=[
                 [KeyboardButton(text=buttons[language]["btn_send_location"], request_location=True)]
