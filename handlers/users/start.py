@@ -7,6 +7,8 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from data.config import ADMINS
 from components.messages import buttons, messages
 from datetime import datetime
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from components.api import get_prayer_times
 
 router = Router()
 
@@ -140,15 +142,103 @@ async def handle_namaz_time_btn(callback: types.CallbackQuery):
     user = await db.select_user(telegram_id=callback.from_user.id)
     language = user.get("language", "uz")
     
-    back_button = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text=buttons[language]["btn_back"], callback_data="main_menu")]
-    ])
+    if user.get("latitude") and user.get("longitude"):
+        # Foydalanuvchida joylashuvi bor, yangilash tugmasini ko'rsatamiz
+        update_location_keyboard = ReplyKeyboardMarkup(
+            keyboard=[
+                [KeyboardButton(text=buttons[language]["btn_update_location"], request_location=True)]
+            ],
+            resize_keyboard=True,
+            one_time_keyboard=True
+        )
+        await callback.message.answer(
+            text=messages[language]["update_location_prompt"],
+            reply_markup=update_location_keyboard
+        )
+    else:
+        # Foydalanuvchida joylashuvi yo'q, joylashuvni so'raymiz
+        location_keyboard = ReplyKeyboardMarkup(
+            keyboard=[
+                [KeyboardButton(text=buttons[language]["btn_send_location"], request_location=True)]
+            ],
+            resize_keyboard=True,
+            one_time_keyboard=True
+        )
+        await callback.message.answer(
+            text=messages[language]["request_location"],
+            reply_markup=location_keyboard
+        )
     
-    await callback.message.edit_text(
-        text=messages[language]["namaz_time_info"],
-        reply_markup=back_button
-    )
     await callback.answer()
+
+
+@router.message(F.content_types == types.ContentType.LOCATION)
+async def handle_location(message: types.Message):
+    user = await db.select_user(telegram_id=message.from_user.id)
+    language = user.get("language", "uz")
+    
+    latitude = message.location.latitude
+    longitude = message.location.longitude
+    
+    # Joylashuvni ma'lumotlar bazasiga saqlash
+    await db.save_user_location(message.from_user.id, latitude, longitude)
+    
+    # Namoz vaqtlarini hisoblash
+    prayer_times = await get_prayer_times(latitude, longitude)
+    
+    # Namoz vaqtlarini foydalanuvchiga yuborish
+    prayer_times_text = messages[language]["namaz_times_template"].format(
+        fajr=prayer_times["Fajr"],
+        dhuhr=prayer_times["Dhuhr"],
+        asr=prayer_times["Asr"],
+        maghrib=prayer_times["Maghrib"],
+        isha=prayer_times["Isha"]
+    )
+    
+    await message.answer(
+        text=prayer_times_text,
+        parse_mode=ParseMode.HTML,
+        reply_markup=get_inline_keyboard(language)
+    )
+
+@router.message(F.text == buttons["uz"]["btn_update_location"] or
+                F.text == buttons["kiril"]["btn_update_location"]
+                )
+async def handle_update_location(message: types.Message):
+    user = await db.select_user(telegram_id=message.from_user.id)
+    language = user.get("language", "uz")
+    
+    if user.get("latitude") and user.get("longitude"):
+        # Saqlangan joylashuv bo'yicha namoz vaqtlarini hisoblab beramiz
+        prayer_times = await get_prayer_times(user["latitude"], user["longitude"])
+        
+        prayer_times_text = messages[language]["namaz_times_template"].format(
+            fajr=prayer_times["Fajr"],
+            dhuhr=prayer_times["Dhuhr"],
+            asr=prayer_times["Asr"],
+            maghrib=prayer_times["Maghrib"],
+            isha=prayer_times["Isha"]
+        )
+        
+        await message.answer(
+            text=prayer_times_text,
+            parse_mode=ParseMode.HTML,
+            reply_markup=get_inline_keyboard(language)
+        )
+    else:
+        # Foydalanuvchida joylashuvi yo'q, joylashuvni so'raymiz
+        location_keyboard = ReplyKeyboardMarkup(
+            keyboard=[
+                [KeyboardButton(text=buttons[language]["btn_send_location"], request_location=True)]
+            ],
+            resize_keyboard=True,
+            one_time_keyboard=True
+        )
+        await message.answer(
+            text=messages[language]["request_location"],
+            reply_markup=location_keyboard
+        )
+
 
 @router.callback_query(F.data == "main_menu")
 async def show_main_menu(callback: types.CallbackQuery):

@@ -58,6 +58,8 @@ class Database:
             username VARCHAR(255) NULL,
             language VARCHAR(10) DEFAULT 'uz',
             is_admin BOOLEAN DEFAULT FALSE,
+            latitude DOUBLE PRECISION NULL,  # Foydalanuvchi joylashuvi (kenglik)
+            longitude DOUBLE PRECISION NULL, # Foydalanuvchi joylashuvi (uzunlik)
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
         """
@@ -137,7 +139,14 @@ class Database:
         return await self.execute(sql, search_code, fetch=True)
     
     
-    
+    async def save_user_location(self, telegram_id: int, latitude: float, longitude: float):
+        sql = """
+        UPDATE Users
+        SET latitude = $1, longitude = $2
+        WHERE telegram_id = $3;
+        """
+        await self.execute(sql, latitude, longitude, telegram_id, execute=True)
+        
     
     
     ###################################################################################
