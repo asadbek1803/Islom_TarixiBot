@@ -190,6 +190,19 @@ async def handle_namaz_time_btn(callback: types.CallbackQuery):
     
     await callback.answer()
 
+@router.message(F.text.in_({buttons["uz"]["btn_back"], buttons["kiril"]["btn_back"]}))
+async def handle_back_button(message: types.Message):
+    """Orqaga tugmasi uchun handler"""
+    user = await db.select_user(telegram_id=message.from_user.id)
+    language = user.get("language", "uz")
+    
+    # Remove ReplyKeyboardMarkup and show main menu
+    await message.answer(
+        text=messages[language]["main_menu_text"],
+        parse_mode=ParseMode.HTML,
+        reply_markup=get_inline_keyboard(language)
+    )
+
 @router.message(F.location)
 async def handle_location(message: types.Message):
     user = await db.select_user(telegram_id=message.from_user.id)
@@ -267,7 +280,7 @@ async def handle_update_location(message: types.Message):
 
 
 
-@router.callback_query(F.data == "main_menu" or F.text == "Orqaga ⬅️" or F.text == "Орқага ⬅️")
+@router.callback_query(F.data == "main_menu")
 async def show_main_menu(callback: types.CallbackQuery):
     user = await db.select_user(telegram_id=callback.from_user.id)
     language = user.get("language", "uz")
