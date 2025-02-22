@@ -167,10 +167,12 @@ async def show_developer_about(call: types.CallbackQuery):
     user = await db.select_user(telegram_id=call.from_user.id)
     language = user.get("language", "uz")
 
-    back_inline = InlineKeyboardMarkup(inline_keyboard=[InlineKeyboardButton(text=buttons[language]["btn_back"], callback_data="main_menu")])
+    back_button = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text=buttons[language]["btn_back"], callback_data="main_menu")]
+    ])
     await call.message.edit_text(
         text=messages[language]["developer-about"],
         parse_mode=ParseMode.HTML,
-        reply_markup=back_inline
+        reply_markup=back_button
     )
     await call.answer()
