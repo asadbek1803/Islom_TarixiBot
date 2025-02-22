@@ -8,7 +8,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from data.config import ADMINS
 from components.messages import buttons, messages
 from datetime import datetime
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 from components.api import get_prayer_times, get_address
 
 router = Router()
@@ -237,48 +237,29 @@ async def handle_location(message: types.Message):
         reply_markup=get_inline_keyboard(language)
     )
 
-@router.message(F.text.in_({buttons["uz"]["btn_update_location"], buttons["kiril"]["btn_update_location"]}))
-async def handle_update_location(message: types.Message):
+
+
+
+
+@router.message(F.text.in_({buttons["uz"]["btn_back"], buttons["kiril"]["btn_back"]}))
+async def handle_back_button(message: types.Message):
+    """Orqaga tugmasi uchun handler"""
     user = await db.select_user(telegram_id=message.from_user.id)
     language = user.get("language", "uz")
     
-    if user.get("latitude") and user.get("longitude"):
-        # Get saved address
-        address = await get_address(user["latitude"], user["longitude"])
-        
-        # Get prayer times using saved coordinates
-        prayer_times = await get_prayer_times(user["latitude"], user["longitude"])
-        
-        # Format prayer times text with address
-        prayer_times_text = (
-            f"🕌 Namoz vaqtlari:\n\n"
-            f"📌 Manzil: {address}\n"
-            f"🌄 Bomdod: {prayer_times['Fajr']}\n"
-            f"☀️ Peshin: {prayer_times['Dhuhr']}\n"
-            f"🌇 Asr: {prayer_times['Asr']}\n"
-            f"🌆 Shom: {prayer_times['Maghrib']}\n"
-            f"🌃 Xufton: {prayer_times['Isha']}"
-        )
-        
-        await message.answer(
-            text=prayer_times_text,
-            parse_mode=ParseMode.HTML,
-            reply_markup=get_inline_keyboard(language)
-        )
-    else:
-        location_keyboard = ReplyKeyboardMarkup(
-            keyboard=[
-                [KeyboardButton(text=buttons[language]["btn_send_location"], request_location=True)]
-            ],
-            resize_keyboard=True,
-            one_time_keyboard=True
-        )
-        await message.answer(
-            text=messages[language]["request_location"],
-            reply_markup=location_keyboard
-        )
-
-
+    # Avval ReplyKeyboardMarkup ni olib tashlaymiz
+    await message.answer(
+        text=messages[language]["selecting_menu"],  # "Menyu tanlanmoqda..." yoki shunga o'xshash xabar
+        reply_markup=ReplyKeyboardRemove()
+    )
+    
+    # Keyin asosiy menyuni ko'rsatamiz
+    await message.answer(
+        text=messages[language]["main_menu_text"],
+        parse_mode=ParseMode.HTML,
+        reply_markup=get_inline_keyboard(language)
+    )
+    
 
 @router.callback_query(F.data == "main_menu")
 async def show_main_menu(callback: types.CallbackQuery):

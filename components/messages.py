@@ -31,6 +31,8 @@ buttons = {
 
 messages = {
     "uz": {
+        "selecting_menu": "Menyu tanlanmoqda...",
+        "main_menu_text": "Asosiy menyu:",
         "start_command": "Assalomu alaykum xush kelibsiz {name}! Quyidagi bo'limlardan birini tanlang👇👇👇👇",
         "choose_lang": "🌍 Iltimos, tilni tanlang:\n\n🇺🇿 O'zbekcha | 🇺🇿 Ўзбек кирил",
         "films_section": "Payg'ambarlar tarixi bo'limi 🎬\nQuyidagi kategoriyalardan birini tanlang:",
@@ -50,6 +52,8 @@ messages = {
     },
 
     "kiril": {
+        "selecting_menu": "Меню танланмоқда...",
+        "main_menu_text": "Асосий меню:",
         "start_command": "Ассалому алайкум хуш келибсиз {name}! Қуйидаги бўлимлардан бирини танланг👇👇👇👇",
         "choose_lang": "🌍 Илтимос, тилни танланг:\n\n🇺🇿 O'zbekcha | 🇺🇿 Ўзбек кирил",
         "films_section": "Пайғамбарлар тарихи бўлими 🎬\nҚуйидаги категориялардан бирини танланг:",
