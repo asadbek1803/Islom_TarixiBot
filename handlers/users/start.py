@@ -148,15 +148,15 @@ async def handle_namaz_time_btn(callback: types.CallbackQuery):
 
         address = await get_address(user.get("latitude"), user.get("longitude"))
         # Format prayer times text with address
-        prayer_times_text = f"""🕌 Namoz vaqtlari:
-                                📌 Manzil: {address}
-
-                                🌄 Bomdod: {prayer_times["Fajr"]}
-                                ☀️ Peshin: {prayer_times["Dhuhr"]}
-                                🌇 Asr: {prayer_times["Asr"]}
-                                🌆 Shom: {prayer_times["Maghrib"]}
-                                🌃 Xufton: {prayer_times["Isha"]}
-        """
+        prayer_times_text = (
+                f"🕌 Namoz vaqtlari:\n\n"
+                f"📌 Manzil: {address}\n"
+                f"🌄 Bomdod: {prayer_times['Fajr']}\n"
+                f"☀️ Peshin: {prayer_times['Dhuhr']}\n"
+                f"🌇 Asr: {prayer_times['Asr']}\n"
+                f"🌆 Shom: {prayer_times['Maghrib']}\n"
+                f"🌃 Xufton: {prayer_times['Isha']}"
+        )
         
         await callback.message.answer(
             text=prayer_times_text,
@@ -165,7 +165,8 @@ async def handle_namaz_time_btn(callback: types.CallbackQuery):
         )
         update_location_keyboard = ReplyKeyboardMarkup(
             keyboard=[
-                [KeyboardButton(text=buttons[language]["btn_update_location"], request_location=True)]
+                [KeyboardButton(text=buttons[language]["btn_update_location"], request_location=True)],
+                [KeyboardButton(text=buttons[language]["btn_back"])]
             ],
             resize_keyboard=True,
             one_time_keyboard=True
@@ -207,15 +208,15 @@ async def handle_location(message: types.Message):
     prayer_times = await get_prayer_times(latitude, longitude)
     
     # Format prayer times text with address
-    prayer_times_text = f"""🕌 Namoz vaqtlari:
-                            📌 Manzil: {address}
-
-                            🌄 Bomdod: {prayer_times["Fajr"]}
-                            ☀️ Peshin: {prayer_times["Dhuhr"]}
-                            🌇 Asr: {prayer_times["Asr"]}
-                            🌆 Shom: {prayer_times["Maghrib"]}
-                            🌃 Xufton: {prayer_times["Isha"]}
-    """
+    prayer_times_text = (
+            f"🕌 Namoz vaqtlari:\n\n"
+            f"📌 Manzil: {address}\n"
+            f"🌄 Bomdod: {prayer_times['Fajr']}\n"
+            f"☀️ Peshin: {prayer_times['Dhuhr']}\n"
+            f"🌇 Asr: {prayer_times['Asr']}\n"
+            f"🌆 Shom: {prayer_times['Maghrib']}\n"
+            f"🌃 Xufton: {prayer_times['Isha']}"
+        )
     
     await message.answer(
         text=prayer_times_text,
@@ -236,14 +237,15 @@ async def handle_update_location(message: types.Message):
         prayer_times = await get_prayer_times(user["latitude"], user["longitude"])
         
         # Format prayer times text with address
-        prayer_times_text = f"""🕌 Namoz vaqtlari:
-                📌 Manzil: {address}
-
-                🌄 Bomdod: {prayer_times["Fajr"]}
-                ☀️ Peshin: {prayer_times["Dhuhr"]}
-                🌇 Asr: {prayer_times["Asr"]}
-                🌆 Shom: {prayer_times["Maghrib"]}
-                🌃 Xufton: {prayer_times["Isha"]}"""
+        prayer_times_text = (
+            f"🕌 Namoz vaqtlari:\n\n"
+            f"📌 Manzil: {address}\n"
+            f"🌄 Bomdod: {prayer_times['Fajr']}\n"
+            f"☀️ Peshin: {prayer_times['Dhuhr']}\n"
+            f"🌇 Asr: {prayer_times['Asr']}\n"
+            f"🌆 Shom: {prayer_times['Maghrib']}\n"
+            f"🌃 Xufton: {prayer_times['Isha']}"
+        )
         
         await message.answer(
             text=prayer_times_text,
