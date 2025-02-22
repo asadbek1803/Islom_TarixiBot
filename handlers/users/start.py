@@ -17,7 +17,8 @@ def get_inline_keyboard(language):
         [
             InlineKeyboardButton(text=buttons[language]["btn_namaz_time"], callback_data="btn_namaz_time"), 
             InlineKeyboardButton(text=buttons[language]["btn_change_lang"], callback_data="btn_change_lang")
-        ]
+        ],
+        [InlineKeyboardButton(text=buttons[language]["developer"], callback_data="developer")]
     ])
 
 def language_keyboard():
@@ -160,3 +161,16 @@ async def show_main_menu(callback: types.CallbackQuery):
         reply_markup=get_inline_keyboard(language)
     )
     await callback.answer()
+
+@router.callback_query(F.data == "developer")
+async def show_developer_about(call: types.CallbackQuery):
+    user = await db.select_user(telegram_id=call.from_user.id)
+    language = user.get("language", "uz")
+
+    back_inline = InlineKeyboardButton(text=buttons[language]["btn_back"], callback_data="main_menu")
+    await call.message.edit_text(
+        text=messages[language]["developer-about"],
+        parse_mode=ParseMode.HTML,
+        reply_markup=InlineKeyboardMarkup(back_inline)
+    )
+    await call.answer()
