@@ -245,31 +245,21 @@ async def handle_location(message: types.Message):
 
 @router.message(F.text.in_({buttons["uz"]["btn_back"], buttons["kiril"]["btn_back"]}))
 async def handle_back_button(message: types.Message):
-    """Orqaga tugmasi uchun handler"""
     user = await db.select_user(telegram_id=message.from_user.id)
     language = user.get("language", "uz")
     
-    # ReplyKeyboardMarkup ni empty keyboard bilan almashtiramiz
-    remove_keyboard = ReplyKeyboardMarkup(
-        keyboard=[],
-        resize_keyboard=True,
-        remove_keyboard=True
-    )
-    
-    # Asosiy menyuni ko'rsatamiz
     await message.answer(
         text=messages[language]["main_menu_text"],
         parse_mode=ParseMode.HTML,
-        reply_markup=remove_keyboard
+        reply_markup=types.ReplyKeyboardRemove(remove_keyboard=True)
     )
     
-    # Inline keyboard bilan yangi xabar yuboramiz
     await message.answer(
         text=messages[language]["main_menu_text"],
         parse_mode=ParseMode.HTML,
         reply_markup=get_inline_keyboard(language)
     )
-
+    
 
 @router.callback_query(F.data == "main_menu")
 async def show_main_menu(callback: types.CallbackQuery):
