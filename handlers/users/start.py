@@ -248,18 +248,20 @@ async def handle_back_button(message: types.Message):
     user = await db.select_user(telegram_id=message.from_user.id)
     language = user.get("language", "uz")
     
+    # Klaviaturani olib tashlash va inline klaviaturani yuborish
     await message.answer(
         text=messages[language]["main_menu_text"],
         parse_mode=ParseMode.HTML,
         reply_markup=types.ReplyKeyboardRemove(remove_keyboard=True)
     )
     
+    # Inline klaviaturani yuborish
     await message.answer(
         text=messages[language]["main_menu_text"],
         parse_mode=ParseMode.HTML,
         reply_markup=get_inline_keyboard(language)
     )
-    
+
 
 @router.callback_query(F.data == "main_menu")
 async def show_main_menu(callback: types.CallbackQuery):
