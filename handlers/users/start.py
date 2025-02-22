@@ -266,7 +266,8 @@ async def handle_update_location(message: types.Message):
         )
 
 
-@router.callback_query(F.data == "main_menu")
+
+@router.callback_query(F.data == "main_menu" or F.text == "Orqaga ⬅️" or F.text == "Орқага ⬅️")
 async def show_main_menu(callback: types.CallbackQuery):
     user = await db.select_user(telegram_id=callback.from_user.id)
     language = user.get("language", "uz")
