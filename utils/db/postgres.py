@@ -58,8 +58,8 @@ class Database:
             username VARCHAR(255) NULL,
             language VARCHAR(10) DEFAULT 'uz',
             is_admin BOOLEAN DEFAULT FALSE,
-            latitude DOUBLE PRECISION NULL,  # Foydalanuvchi joylashuvi (kenglik)
-            longitude DOUBLE PRECISION NULL, # Foydalanuvchi joylashuvi (uzunlik)
+            latitude DOUBLE PRECISION NULL,  -- Foydalanuvchi joylashuvi (kenglik)
+            longitude DOUBLE PRECISION NULL, -- Foydalanuvchi joylashuvi (uzunlik)
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
         """
