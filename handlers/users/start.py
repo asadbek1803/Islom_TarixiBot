@@ -1,5 +1,6 @@
 from aiogram import Router, types, F
-from aiogram.filters import CommandStart, Text
+from aiogram.filters import CommandStart
+
 from aiogram.enums.parse_mode import ParseMode
 from aiogram.client.session.middlewares.request_logging import logger
 from loader import db, bot
@@ -200,7 +201,8 @@ async def handle_location(message: types.Message):
         reply_markup=get_inline_keyboard(language)
     )
 
-@router.message(Text(text=[buttons["uz"]["btn_update_location"], buttons["kiril"]["btn_update_location"]]))  # Changed filter
+@router.message(F.text ==  buttons["uz"]["btn_update_location"] or
+                F.text ==  buttons["kiril"]["btn_update_location"])  # Changed filter
 async def handle_update_location(message: types.Message):
     user = await db.select_user(telegram_id=message.from_user.id)
     language = user.get("language", "uz")
