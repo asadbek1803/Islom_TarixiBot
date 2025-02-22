@@ -1,5 +1,5 @@
 from aiogram import Router, types, F
-from aiogram.filters import CommandStart
+from aiogram.filters import CommandStart, Text
 from aiogram.enums.parse_mode import ParseMode
 from aiogram.client.session.middlewares.request_logging import logger
 from loader import db, bot
@@ -171,8 +171,7 @@ async def handle_namaz_time_btn(callback: types.CallbackQuery):
     
     await callback.answer()
 
-
-@router.message(F.content_types == types.ContentType.LOCATION)
+@router.message(F.location)  # Changed from F.content_types
 async def handle_location(message: types.Message):
     user = await db.select_user(telegram_id=message.from_user.id)
     language = user.get("language", "uz")
@@ -201,9 +200,7 @@ async def handle_location(message: types.Message):
         reply_markup=get_inline_keyboard(language)
     )
 
-@router.message(F.text == buttons["uz"]["btn_update_location"] or
-                F.text == buttons["kiril"]["btn_update_location"]
-                )
+@router.message(Text(text=[buttons["uz"]["btn_update_location"], buttons["kiril"]["btn_update_location"]]))  # Changed filter
 async def handle_update_location(message: types.Message):
     user = await db.select_user(telegram_id=message.from_user.id)
     language = user.get("language", "uz")
